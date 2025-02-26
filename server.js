@@ -1,44 +1,66 @@
-const express = require("express");
-const fs = require("fs");
-const cors = require("cors");
-const path = require("path");
+const fs = require('fs');
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const PORT = 3000;
-const FILE_PATH = path.join(__dirname, "user_responses.json");
+const port = 3000;
 
-// Middleware
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// Save data
-app.post("/save", (req, res) => {
-    try {
-        const newData = req.body;
-        let existingData = [];
+const filePath = path.join("C:/Users/Alexander/Desktop", "user_responses.json");
 
-        // Read existing file
-        if (fs.existsSync(FILE_PATH)) {
-            const fileContent = fs.readFileSync(FILE_PATH, "utf8");
-            if (fileContent.trim()) {
-                existingData = JSON.parse(fileContent);
-            }
+// Ensure the JSON file exists
+if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify([]), 'utf8');
+}
+
+// Save data to JSON file
+app.post('/save', (req, res) => {
+    const newData = req.body;
+
+    // Read existing data
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: "Failed to read file" });
         }
 
-        // Append new data
-        existingData.push(...newData);
+        let jsonData = [];
+        try {
+            jsonData = JSON.parse(data);
+        } catch (parseError) {
+            return res.status(500).json({ error: "JSON parsing error" });
+        }
 
-        // Write to file
-        fs.writeFileSync(FILE_PATH, JSON.stringify(existingData, null, 2));
+        jsonData.push(...newData);
 
-        res.json({ message: "Data saved successfully!" });
-    } catch (error) {
-        console.error("Error saving data:", error);
-        res.status(500).json({ error: "Failed to save data" });
-    }
+        // Write back to file
+        fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf8', err => {
+            if (err) {
+                return res.status(500).json({ error: "Failed to save data" });
+            }
+            res.json({ message: "Data saved successfully" });
+        });
+    });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+// Load data from JSON file
+app.get('/load', (req, res) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: "Failed to load data" });
+        }
+        try {
+            const jsonData = JSON.parse(data || "[]");
+            res.json(jsonData);
+        } catch (parseError) {
+            res.status(500).json({ error: "JSON parsing error" });
+        }
+    });
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
 });
