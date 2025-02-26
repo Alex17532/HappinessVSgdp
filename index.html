@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happiness vs GDP</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        #form-container {
+            width: 25%;
+            padding: 20px;
+            background: #cceeff;
+        }
+        #graph-container {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #plot, #gdp-plot {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div id="form-container">
+        <h2>Select Your Country</h2>
+        <label>Insert your name:</label>
+        <input type="text" id="name">
+        <br><br>
+
+        <label>Choose a country:</label>
+        <select id="country">
+            <option value="USA">USA</option>
+            <option value="Canada">Canada</option>
+            <option value="Germany">Germany</option>
+            <option value="India">India</option>
+        </select>
+        <br><br>
+
+        <label>How happy are you? (1-8):</label>
+        <input type="number" id="happiness" min="1" max="8">
+        <br><br>
+
+        <button onclick="submitData()">Submit</button>
+        <button onclick="saveData()">Save Data</button>
+        <button onclick="loadData()">Load Data</button>
+    </div>
+    <div id="graph-container">
+        <div id="plot"></div>
+        <div id="gdp-plot"></div>
+    </div>
+
+    <script>
+        let dataStore = [];
+
+        function submitData() {
+            let name = document.getElementById("name").value;
+            let country = document.getElementById("country").value;
+            let happiness = parseFloat(document.getElementById("happiness").value);
+            let gdp = Math.random() * 2;  // Simulating GDP per capita
+            
+            if (!isNaN(happiness)) {
+                dataStore.push({ name, country, happiness, gdp });
+                updateGraph();
+            }
+        }
+
+        function updateGraph() {
+            let trace = {
+                x: dataStore.map(d => d.gdp),
+                y: dataStore.map(d => d.happiness),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { size: 10 }
+            };
+            let layout = { 
+                title: 'Happiness vs GDP Per Capita', 
+                xaxis: { title: 'GDP Per Capita' }, 
+                yaxis: { title: 'Happiness Score', range: [1, 8] } 
+            };
+            Plotly.newPlot('plot', [trace], layout);
+        }
+
+        function initializeGraph() {
+            let layout = {
+                title: 'Happiness vs GDP Per Capita',
+                xaxis: { title: 'GDP Per Capita' },
+                yaxis: { title: 'Happiness Score', range: [1, 8] }
+            };
+            Plotly.newPlot('plot', [], layout);
+        }
+
+        function saveData() {
+            fetch('http://localhost:3000/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataStore)
+            })
+            .then(response => response.json())
+            .then(data => console.log("Data saved successfully!", data))
+            .catch(error => console.error("Error saving data:", error));
+        }
+
+        function loadData() {
+            fetch('http://localhost:3000/load')
+                .then(response => response.json())
+                .then(data => {
+                    dataStore = data;
+                    updateGraph();
+                })
+                .catch(error => console.error("Error loading data:", error));
+        }
+
+        function loadGDPData() {
+            fetch("happiness_corruption_data.json")
+                .then(response => response.json())
+                .then(data => {
+                    data.sort((a, b) => a["GDP per capita"] - b["GDP per capita"]);
+                    let trace = {
+                        x: data.map(d => d["Country or region"]),
+                        y: data.map(d => d["GDP per capita"]),
+                        mode: 'markers',
+                        type: 'scatter',
+                        marker: { size: 10 }
+                    };
+                    let layout = {
+                        title: 'GDP Per Capita by Country',
+                        xaxis: { title: 'Country', tickangle: -45 },
+                        yaxis: { title: 'GDP Per Capita' }
+                    };
+                    Plotly.newPlot('gdp-plot', [trace], layout);
+                })
+                .catch(error => console.error("Error loading GDP data:", error));
+        }
+
+        window.onload = function() {
+            initializeGraph();
+            loadGDPData();
+        };
+    </script>
+</body>
+</html>
