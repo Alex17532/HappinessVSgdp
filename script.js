@@ -1,5 +1,5 @@
 let dataStore = [];
-
+let skibiditoilet = "yolo"
         const gdpData = {
             "USA": 69.287,
             "Canada": 55.534,
@@ -21,7 +21,6 @@ let dataStore = [];
             "Turkey": 11.765,
             "Netherlands": 58.385
         };
-
         function populateCountryDropdown() {
             let dropdown = document.getElementById("country");
             for (let country in gdpData) {
@@ -31,7 +30,6 @@ let dataStore = [];
                 dropdown.appendChild(option);
             }
         }
-
         function submitData() {
             let name = document.getElementById("name").value;
             let country = document.getElementById("country").value;
@@ -43,7 +41,6 @@ let dataStore = [];
                 updateGraphs();
             }
         }
-
         function updateGraphs() {
             let happinessTrace = {
                 x: dataStore.map(d => d.gdp),
@@ -58,7 +55,6 @@ let dataStore = [];
                 yaxis: { title: 'Happiness Score', range: [1, 8] } 
             };
             Plotly.newPlot('plot', [happinessTrace], happinessLayout);
-
             let sortedCountries = Object.entries(gdpData).sort((a, b) => a[1] - b[1]);
             let gdpTrace = {
                 x: sortedCountries.map(d => d[0]),
@@ -74,11 +70,9 @@ let dataStore = [];
             };
             Plotly.newPlot('gdp-plot', [gdpTrace], gdpLayout);
         }
-
         function initializeGraphs() {
             updateGraphs();
         }
-
         function saveData() {
             fetch('http://localhost:3000/save', {
                 method: 'POST',
@@ -89,7 +83,6 @@ let dataStore = [];
             .then(data => console.log("Data saved successfully!", data))
             .catch(error => console.error("Error saving data:", error));
         }
-
         function loadData() {
             fetch('http://localhost:3000/load')
                 .then(response => response.json())
@@ -99,7 +92,6 @@ let dataStore = [];
                 })
                 .catch(error => console.error("Error loading data:", error));
         }
-
         window.onload = function() {
             initializeGraphs();
             populateCountryDropdown();
