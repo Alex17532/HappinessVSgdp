@@ -9,7 +9,8 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-const filePath = path.join("C:/Users/Alexander/Desktop", "user_responses.json");
+// Define the local file path
+const filePath = path.join(__dirname, "user_responses.json");
 
 // Ensure the JSON file exists
 if (!fs.existsSync(filePath)) {
